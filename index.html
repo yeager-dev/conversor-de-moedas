@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de moedas</title>
+</head>
+<body>
+    <h1>Conversor de moedas</h1>
+    <div id="source">
+        <label>De:</label>
+        <select name="source-currency" id="source-currency"></select>
+        <input type="number" id="amount">
+    </div>
+    <div id="target">
+        <label>Alvo:</label>
+        <select name="target-currency" id="target-currency"></select>
+    </div>
+    <button id="convert">Converter</button>
+    <h1 id="result"></h1>
+    
+    <script>
+        const $sourceCurrency = document.querySelector('#source-currency');
+        const $targetCurrency = document.querySelector('#target-currency');
+        const $convert        = document.querySelector('#convert');
+        const $result = document.querySelector('#result');
+
+        main();
+
+        $convert.addEventListener('click', convert);
+
+        async function createCurrencyOptions(currencies) {
+            const options = [];
+
+            for (const key of Object.keys(currencies)) {
+                const currency = currencies[key];
+
+                const option = document.createElement('option');
+                option.setAttribute('value', currency.id);
+                option.innerText = currency.id;
+
+                options.push(option);
+            }
+
+            return options;
+        }
+
+        async function convert() {
+            const amount = parseInt(document.querySelector('#amount').value);
+            const sourceCurrency = document.querySelector('#source-currency').value;
+            const targetCurrency = document.querySelector('#target-currency').value;
+
+            const pair = `${sourceCurrency}_${targetCurrency}`;
+            const reversePair = `${targetCurrency}_${sourceCurrency}`;
+
+            const response = await fetch(`https://free.currconv.com/api/v7/convert?q=${pair},${reversePair}&compact=ultra&apiKey=e25fb66c169d6fdcd31c`);
+            const data = await response.json();
+            const convertedValue = amount * data[pair];
+            const convertedValueReverse = amount * data[reversePair];
+
+            $result.innerHTML = `${amount} ${sourceCurrency} convertido para a moeda ${targetCurrency} é igual a ${convertedValue} ${targetCurrency}.<br> ${amount} ${targetCurrency} convertido para a moeda ${sourceCurrency} é igual a ${convertedValueReverse} ${sourceCurrency}`;
+        }
+
+        async function main() {
+            const response = await fetch('https://free.currconv.com/api/v7/currencies?apiKey=e25fb66c169d6fdcd31c');
+            const data = await response.json();
+
+            const currencies = data.results;
+
+            const targetOptions = await createCurrencyOptions(currencies);
+
+            targetOptions.forEach((option) => {
+                $targetCurrency.appendChild(option);
+            });
+
+            const sourceOptions = await createCurrencyOptions(currencies);
+
+            sourceOptions.forEach((option) => {
+                $sourceCurrency.appendChild(option);
+            });
+        }
+    </script>
+</body>
+</html>
